@@ -1,7 +1,13 @@
 <?php
-if (isset($_GET['save']) && isset($_GET['slug']) && isset($_GET['html'])) {
-  $slug = trim($_GET['slug'], "/");
-  $html = $_GET['html'];
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+  $slug = trim($_POST['slug'] ?? '', "/");
+  $html = $_POST['html'] ?? '';
+
+  if (!$slug || !$html) {
+    http_response_code(400);
+    echo "❌ Missing slug or HTML.";
+    exit;
+  }
 
   $folder = dirname(__DIR__) . "/$slug";
   $file = "$folder/index.html";
@@ -15,6 +21,7 @@ if (isset($_GET['save']) && isset($_GET['slug']) && isset($_GET['html'])) {
   exit;
 }
 ?>
+
 
 <!DOCTYPE html>
 <html lang="en">
@@ -59,8 +66,17 @@ if (isset($_GET['save']) && isset($_GET['slug']) && isset($_GET['html'])) {
 
       try {
         const html = iframe.contentDocument.documentElement.outerHTML;
-        const encoded = encodeURIComponent(html);
-        window.location.href = `?save=1&slug=${slug}&html=${encoded}`;
+
+        fetch('', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: new URLSearchParams({ slug, html })
+        })
+        .then(res => res.text())
+        .then(msg => {
+          document.getElementById('result').textContent = msg;
+        });
+
       } catch (e) {
         alert('❌ Unable to access iframe. Must be same-origin.');
       }
