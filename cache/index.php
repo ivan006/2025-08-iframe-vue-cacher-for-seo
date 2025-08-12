@@ -3,13 +3,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   $slug = trim($_POST['slug'] ?? '', "/");
   $html = $_POST['html'] ?? '';
 
-  if (!$slug || !$html) {
+  if ($html === '') {
     http_response_code(400);
-    echo "❌ Missing slug or HTML.";
+    echo "❌ Missing HTML content.";
     exit;
   }
 
-  $folder = dirname(__DIR__) . "/$slug";
+  // Determine folder and file paths
+  $folder = $slug === '' ? dirname(__DIR__) : dirname(__DIR__) . "/$slug";
   $file = "$folder/index.html";
 
   if (!is_dir($folder)) {
@@ -17,11 +18,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   }
 
   file_put_contents($file, $html);
-  echo "✅ Saved to /$slug/index.html";
+  echo "✅ Saved to /" . ($slug === '' ? '' : "$slug/") . "index.html";
   exit;
 }
 ?>
-
 
 <!DOCTYPE html>
 <html lang="en">
@@ -40,8 +40,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </div>
 
     <div class="mb-3">
-      <label for="slug" class="form-label">Save As Slug (e.g. "about")</label>
-      <input type="text" id="slug" class="form-control" placeholder="about">
+      <label for="slug" class="form-label">Save As Slug (e.g. "about", or leave blank for homepage)</label>
+      <input type="text" id="slug" class="form-control" placeholder="about or leave blank for homepage">
     </div>
 
     <div class="mb-3">
