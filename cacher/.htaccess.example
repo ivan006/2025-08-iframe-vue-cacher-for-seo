@@ -1,0 +1,5 @@
+#Protect Directory
+AuthName "Dialog prompt"
+AuthType Basic
+AuthUserFile /usr/www/users/letsnvjszh/hospitality.servicesoncall.net/cacher/.htpasswd <- change this
+Require valid-user
