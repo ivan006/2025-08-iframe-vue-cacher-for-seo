@@ -10,8 +10,8 @@ This setup allows you to **pre-render your Quasar SPA** into static HTML files w
 
 ```
 project-root/
+├── spa/                  <-- Quasar SPA build output (e.g. dist/spa)
 └── cacher/
-    ├── spa/              <-- Quasar SPA build output (e.g. dist/spa)
     ├── [cached pages]/   <-- Static HTML snapshots (e.g. /services/index.html)
     └── index.php         <-- Page saver UI and PHP logic
 ```
@@ -22,7 +22,7 @@ project-root/
 
 ```js
 build: {
-  publicPath: '/cacher/spa/', // Required for correct resource loading
+  publicPath: '/spa/', // Required for correct resource loading
   routerMode: 'hash',         // Hash mode enables reliable static routing
 },
 boot: ['quasar-but-cached-support'],
@@ -37,13 +37,15 @@ This boot file **blocks hydration** on cached HTML.
 ```js
 export default async () => {
   const isCacher = window.location.pathname.startsWith('/cacher/');
+  const isSpa = window.location.pathname.startsWith('/spa/');
 
   // Abort *before* hydration and router kick in
-  if (!isCacher) {
+  if (!isCacher && !isSpa) {
     // Skip hydration AND prevent router from being created
     throw new Error('Skipping Vue mount: prerendered page.');
   }
 }
+
 ```
 
 
@@ -60,7 +62,7 @@ export default async () => {
 2. **Copy output:**
 
    ```bash
-   cp -r dist/spa/* /path/to/server/cacher/spa/
+   cp -r dist/spa/* /path/to/server/spa/
    ```
 
 3. **Upload caching UI:**
@@ -75,10 +77,10 @@ export default async () => {
 
 | What                        | Path / Action                             |
 | --------------------------- | ----------------------------------------- |
-| Build output                | `/cacher/spa/`                            |
+| Build output                | `/spa/`                            |
 | Caching interface           | `/cacher/`                                |
-| Cached page (e.g. About)    | `/cacher/about/`                          |
-| Vue hydration is disabled   | Everywhere **except** `/cacher/spa/`      |
+| Cached page (e.g. About)    | `/about/`                          |
+| Vue hydration is disabled   | Everywhere **except** `/spa/`      |
 
 
 
