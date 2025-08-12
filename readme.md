@@ -158,8 +158,8 @@ export default {
   },
   methods: {
     handleClick(e) {
-      e.preventDefault();
-      this.$router.push(this.smartTo);
+        e.preventDefault()
+        this.$router.push(this.smartTo);
     }
   }
 };
