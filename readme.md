@@ -1,6 +1,4 @@
-Perfect — here's the updated `README.md` with `:to` behavior interception handled **inside the boot file**, keeping your components clean:
 
----
 
 # 🚀 Quasar But Cached (`quasar-but-cached`)
 
@@ -94,6 +92,89 @@ This keeps all your component logic unchanged — `:to="..."` will just work in 
 | Vue hydration is disabled   | Everywhere **except** `/cacher/spa/`      |
 | Vue `router.push()` rewrite | Always redirects to static-friendly links |
 
+
+
+Here’s a new **README section** explaining how to use the `QuasarButCachedLink` component:
+
 ---
 
-Let me know if you'd like `.htaccess` rules for fallback or routing normalization too.
+## 🔗 Smart Links for Cached + SPA Routing
+
+When using **Quasar But Cached**, standard Vue router links like `:to="..."` don’t work properly in cached (static HTML) mode. This is because client-side routing is disabled in cached builds, and navigation must use hash-based fallback instead.
+
+To address this, use the custom `QuasarButCachedLink` component instead of `<q-item :to="...">`.
+
+### ✅ Features
+
+* Outputs clean `<a href="...">` links for SEO and bots
+* Intercepts clicks and dynamically triggers Vue Router navigation (if active)
+* Works in both cached and full SPA environments
+* Fully compatible with all `q-item` props and slots
+
+### 📦 Usage
+
+```vue
+<QuasarButCachedLink
+  smart-to="/services"
+  class="q-pl-lg text-h5"
+  :style="isActive(item) ? 'border-bottom: white solid 5px;' : 'border-bottom: rgba(0,0,0,0) solid 5px;'"
+>
+  <q-item-section>Services</q-item-section>
+</QuasarButCachedLink>
+```
+
+### 🧠 Component Source
+
+```vue
+<template>
+  <q-item
+    clickable
+    tag="a"
+    :href="smartTo"
+    @click="handleClick"
+    v-bind="passThroughAttrs"
+  >
+    <slot />
+  </q-item>
+</template>
+
+<script>
+export default {
+  name: 'QuasarButCachedLink',
+  props: {
+    smartTo: {
+      type: String,
+      required: true
+    }
+  },
+  computed: {
+    passThroughAttrs() {
+      const passAttrs = { ...this.$attrs };
+      delete passAttrs.href;
+      delete passAttrs.to;
+      delete passAttrs.smartTo;
+      return passAttrs;
+    },
+  },
+  methods: {
+    handleClick(e) {
+      e.preventDefault();
+      this.$router.push(this.smartTo);
+    }
+  }
+};
+</script>
+```
+
+### 📁 Location
+
+Place the file in:
+
+```
+/src/components/QuasarButCachedLink.vue
+```
+
+---
+
+Let me know if you also want to support external links, or fallback behavior when Vue Router isn’t present.
+
