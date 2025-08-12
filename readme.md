@@ -32,31 +32,20 @@ boot: ['quasar-but-cached-support'],
 
 ## ⚙️ Boot File: `quasar-but-cached-support.js`
 
-This boot file **blocks hydration** on cached HTML and also rewrites all `:to` navigation into static-safe `<a href="...">` links dynamically.
+This boot file **blocks hydration** on cached HTML.
 
 ```js
-export default async ({ app, router }) => {
-  const { pathname } = window.location
-  const isStatic = !pathname.startsWith('/cacher/spa/')
+export default async () => {
+  const isCacher = window.location.pathname.startsWith('/cacher/');
 
-  if (isStatic) {
-    // ❌ Prevent Vue from booting
-    throw new Error('Skipping Vue mount: prerendered page.')
-  }
-
-  // ✅ Patch router-link globally to avoid broken SPA routing in dev/build mix
-  const originalPush = router.push
-  router.push = function (location, ...args) {
-    if (typeof location === 'string' && !location.startsWith('/cacher/spa/')) {
-      window.location.href = location.includes('#') ? location : `${location}#${location}`
-      return
-    }
-    return originalPush.call(this, location, ...args)
+  // Abort *before* hydration and router kick in
+  if (!isCacher) {
+    // Skip hydration AND prevent router from being created
+    throw new Error('Skipping Vue mount: prerendered page.');
   }
 }
 ```
 
-This keeps all your component logic unchanged — `:to="..."` will just work in both SPA and cached views.
 
 ---
 
@@ -90,13 +79,9 @@ This keeps all your component logic unchanged — `:to="..."` will just work in 
 | Caching interface           | `/cacher/`                                |
 | Cached page (e.g. About)    | `/cacher/about/`                          |
 | Vue hydration is disabled   | Everywhere **except** `/cacher/spa/`      |
-| Vue `router.push()` rewrite | Always redirects to static-friendly links |
 
 
 
-Here’s a new **README section** explaining how to use the `QuasarButCachedLink` component:
-
----
 
 ## 🔗 Smart Links for Cached + SPA Routing
 
@@ -173,8 +158,4 @@ Place the file in:
 ```
 /src/components/QuasarButCachedLink.vue
 ```
-
----
-
-Let me know if you also want to support external links, or fallback behavior when Vue Router isn’t present.
 
