@@ -12,8 +12,8 @@ This setup allows you to **pre-render your Quasar SPA** into static HTML files w
 project-root/
 ├── spa/                  <-- Quasar SPA build output (e.g. dist/spa)
 └── cacher/
-    ├── [cached pages]/   <-- Static HTML snapshots (e.g. /services/index.html)
     └── index.php         <-- Page saver UI and PHP logic
+└── [cached pages]/   <-- Static HTML snapshots (e.g. /services/index.html)
 ```
 
 ---
