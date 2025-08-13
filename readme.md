@@ -1,9 +1,7 @@
 
-
 # 🚀 Iframe Vue Cacher for SEO
 
-Run your **Quasar SPA at the root** of your site **and** generate static HTML snapshots for specific routes.
-You get fast, SEO-friendly cached pages **without** disabling hydration or changing how links work.
+Run your **Iframe Vue Cacher for SEO** and generate static HTML snapshots for specific routes.
 
 ---
 
@@ -28,22 +26,32 @@ project-root/                     <- web root
 
 ### Step 1 — Upload cacher folder
 
-* Upload the entire `/cacher/` folder into your site’s root directory (`project-root/`).
+* Upload the entire `/cacher/` folder into your site’s root (`project-root/`).
 
-### Step 2 — Cache pages
+### Step 2 — Build & upload SPA to root
+
+* Build your app:
+
+  ```bash
+  quasar build
+  ```
+* Copy **everything inside** `dist/spa/` to the **root** (`project-root/`), e.g.:
+
+  * `index.html`
+  * `assets/**`
+
+### Step 3 — Cache pages
 
 * Visit `https://yourdomain.com/cacher/`
-* Use the UI to generate/update static HTML snapshots for routes.
-* Snapshots are saved as `/route/index.html` in `project-root/`.
+* Use the UI to generate/update static HTML snapshots.
+* Snapshots are saved as `/route/index.html` in the root.
 
 ---
 
 ## 📌 Important: Link format
 
 All links to cached pages **must** end with a trailing slash (`/`).
-Example:
+Examples:
 
 * ✅ `/services/`
 * ❌ `/services`
-
-This ensures your cached file at `/services/index.html` is served directly without redirects or mismatched active states.
