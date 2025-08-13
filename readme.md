@@ -38,13 +38,12 @@ project-root/                     <- web root
 
 ---
 
-## 🔗 Active Link Check (optional)
+## 📌 Important: Link format
 
-If your cached routes are `/route/` format, normalize trailing slashes before comparing:
+All links to cached pages **must** end with a trailing slash (`/`).
+Example:
 
-```js
-isActive(item) {
-  const normalize = (url) => url.replace(/\/+$/, '');
-  return normalize(item.URL) === normalize(this.activeRoute);
-}
-```
+* ✅ `/services/`
+* ❌ `/services`
+
+This ensures your cached file at `/services/index.html` is served directly without redirects or mismatched active states.
