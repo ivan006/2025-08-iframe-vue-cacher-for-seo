@@ -1,19 +1,36 @@
 <?php
 $base = dirname(__DIR__);
 
+// --- Quasar SPA shell used when clearing homepage ---
+const HOMEPAGE_SHELL = '<!DOCTYPE html><html><head><title>Quasar App</title><meta charset=utf-8><meta name=format-detection content="telephone=no"><meta name=msapplication-tap-highlight content=no><meta name=viewport content="user-scalable=no,initial-scale=1,maximum-scale=1,minimum-scale=1,width=device-width"><link rel=apple-touch-icon sizes=180x180 href=/apple-touch-icon.png><link rel=icon type=image/png sizes=32x32 href=/favicon-32x32.png><link rel=icon type=image/png sizes=16x16 href=/favicon-16x16.png><link rel=manifest href=/site.webmanifest>  <script type="module" crossorigin src="/js/index.js"></script>
+  <link rel="modulepreload" crossorigin href="/js/vendor.js">
+  <link rel="stylesheet" crossorigin href="/css/vendor.css">
+  <link rel="stylesheet" crossorigin href="/css/index.css">
+</head><body><div id=q-app></div></body></html>';
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   $action = $_POST['action'] ?? '';
   $slug   = trim($_POST['slug'] ?? '', "/");
 
   if ($action === 'delete') {
-    $folder = ($slug === '') ? $base : $base . "/$slug";
-    $file   = $folder . "/index.html";
-
-    if (file_exists($file)) {
-      @unlink($file);
-      echo "🗑️ Deleted " . ($slug === '' ? '/index.html' : "/$slug/index.html");
+    if ($slug === '') {
+      // HOMEPAGE: replace only if /index.html exists
+      $file = $base . '/index.html';
+      if (file_exists($file)) {
+        file_put_contents($file, HOMEPAGE_SHELL);
+        echo "🔁 Replaced /index.html with SPA shell.";
+      } else {
+        echo "ℹ️ No /index.html found to replace.";
+      }
     } else {
-      echo "ℹ️ No index.html found to delete.";
+      // NON-HOMEPAGE: delete only if /slug/index.html exists
+      $file = $base . "/$slug/index.html";
+      if (file_exists($file)) {
+        @unlink($file);
+        echo "🗑️ Deleted /$slug/index.html";
+      } else {
+        echo "ℹ️ No /$slug/index.html found to delete.";
+      }
     }
     exit;
   }
@@ -47,22 +64,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Vue Cacher for SEO</title>
+  <title>Iframe Vue Cacher for SEO</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body class="p-4">
   <div class="container">
-    <h1 class="mb-4">Vue Cacher for SEO</h1>
+    <h1 class="mb-4">Iframe Vue Cacher for SEO</h1>
 
     <!-- Step 1 -->
     <div class="mb-3">
       <label for="slug" class="form-label">Step 1 — Enter slug</label>
       <input type="text" id="slug" class="form-control" placeholder='e.g. "services" — leave blank for homepage'>
+      <div class="form-text">Saves to <code>/slug/index.html</code> or <code>/index.html</code> when blank.</div>
     </div>
 
     <!-- Step 2 -->
     <div class="mb-3">
       <button id="btnDelete" class="btn btn-outline-danger" type="button">Step 2 — Delete existing index.html</button>
+      <div class="form-text">
+        Homepage: replaces <code>/index.html</code> with the SPA shell.<br>
+        Other slugs: deletes only <code>/slug/index.html</code>.
+      </div>
     </div>
 
     <!-- Step 3 -->
@@ -72,6 +94,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <input type="url" id="targetUrl" class="form-control" placeholder="https://yourdomain.com/services/">
         <button id="btnRender" class="btn btn-primary" type="button">Render</button>
       </div>
+      <div class="form-text">Must be same-origin so the iframe can read HTML.</div>
     </div>
 
     <iframe id="preview" style="width:100%; height:600px; border:1px solid #ccc;"></iframe>
