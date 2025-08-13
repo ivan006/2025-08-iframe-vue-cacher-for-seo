@@ -1,6 +1,6 @@
 
 
-# 🚀 headful-vue-cacher-for-seo
+# 🚀 Headfull Vue Cacher for SEO
 
 Run your **Quasar SPA at the root** of your site **and** generate static HTML snapshots for specific routes.
 You get fast, SEO-friendly cached pages **without** disabling hydration or changing how links work.
