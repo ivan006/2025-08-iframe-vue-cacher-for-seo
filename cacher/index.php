@@ -27,12 +27,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Vue But Cached Cacher</title>
+  <title>headful-vue-cacher-for-seo</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body class="p-4">
   <div class="container">
-    <h1 class="mb-4">Vue But Cached Cacher</h1>
+    <h1 class="mb-4">headful-vue-cacher-for-seo</h1>
 
     <div class="mb-3">
       <label for="targetUrl" class="form-label">Target URL (from SPA)</label>
