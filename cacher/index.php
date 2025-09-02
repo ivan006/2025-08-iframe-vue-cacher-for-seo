@@ -7,6 +7,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = $_POST['action'] ?? '';
     $slug = trim($_POST['slug'] ?? '', "/");
 
+    if ($action === 'backup') {
+        $file = $base . '/index.html';
+        $backup = $base . '/index.backup.html';
+
+        if (!file_exists($file)) {
+            echo "ℹ️ No /index.html to backup.";
+        } elseif (copy($file, $backup)) {
+            echo "✅ Backup created at /index.backup.html";
+        } else {
+            echo "❌ Failed to create backup.";
+        }
+        exit;
+    }
+
+
     if ($action === 'delete') {
         if ($slug === '') {
             // HOMEPAGE: restore from backup if it exists
@@ -80,6 +95,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <div class="container">
     <h1 class="mb-4">Iframe Vue Cacher for SEO</h1>
 
+    <div class="mt-3">
+        <button id="btnBackup" class="btn btn-outline-secondary " type="button">Step 0 — Backup Root Index</button>
+    </div>
     <!-- Step 1 -->
     <div class="mb-3">
         <label for="slug" class="form-label">Step 1 — Enter slug</label>
@@ -91,7 +109,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <div class="mb-3">
         <button id="btnDelete" class="btn btn-outline-danger" type="button">Step 2 — Delete existing index.html</button>
         <div class="form-text">
-            Homepage: replaces <code>/index.html</code> with the SPA shell.<br>
+            Homepage: replaces <code>/index.html</code> with the backup.<br>
             Other slugs: deletes only <code>/slug/index.html</code>.
         </div>
     </div>
@@ -118,6 +136,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 <script>
     const $ = (id) => document.getElementById(id);
+
+    $('btnBackup').onclick = async () => {
+        const body = new URLSearchParams({ action: 'backup', slug: '' });
+        const res = await fetch('', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body
+        });
+        $('result').textContent = await res.text();
+    };
+
 
     $('btnDelete').onclick = async () => {
         const slug = $('slug').value.trim().replace(/^\/+|\/+$/g, '');
