@@ -50,6 +50,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       mkdir($folder, 0755, true);
     }
 
+    // Remove structured data scripts
+    $html = preg_replace('/<script[^>]+type=["\']application\/ld\+json["\'][^>]*>.*?<\/script>/is', '', $html);
+
+    // Remove canonical links
+    $html = preg_replace('/<link[^>]+rel=["\']canonical["\'][^>]*>/i', '', $html);
+
+    // Remove SEO/social meta tags (description, og, twitter, etc.)
+    $html = preg_replace('/<meta[^>]+name=["\'](description|twitter:[^"\']+)["\'][^>]*>/i', '', $html);
+    $html = preg_replace('/<meta[^>]+property=["\']og:[^"\']+["\'][^>]*>/i', '', $html);
+
     file_put_contents($file, $html);
     echo "✅ Saved to " . ($slug === '' ? '/index.html' : "/$slug/index.html");
     exit;
