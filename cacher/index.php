@@ -2,11 +2,6 @@
 $base = dirname(__DIR__);
 
 // --- Quasar SPA shell used when clearing homepage ---
-const HOMEPAGE_SHELL = '<!DOCTYPE html><html><head><title>Quasar App</title><meta charset=utf-8><meta name=format-detection content="telephone=no"><meta name=msapplication-tap-highlight content=no><meta name=viewport content="user-scalable=no,initial-scale=1,maximum-scale=1,minimum-scale=1,width=device-width"><link rel=apple-touch-icon sizes=180x180 href=/apple-touch-icon.png><link rel=icon type=image/png sizes=32x32 href=/favicon-32x32.png><link rel=icon type=image/png sizes=16x16 href=/favicon-16x16.png><link rel=manifest href=/site.webmanifest>  <script type="module" crossorigin src="/js/index.js"></script>
-  <link rel="modulepreload" crossorigin href="/js/vendor.js">
-  <link rel="stylesheet" crossorigin href="/css/vendor.css">
-  <link rel="stylesheet" crossorigin href="/css/index.css">
-</head><body><div id=q-app></div></body></html>';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = $_POST['action'] ?? '';
@@ -14,11 +9,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if ($action === 'delete') {
         if ($slug === '') {
-            // HOMEPAGE: replace only if /index.html exists
+            // HOMEPAGE: restore from backup if it exists
             $file = $base . '/index.html';
-            if (file_exists($file)) {
-                file_put_contents($file, HOMEPAGE_SHELL);
-                echo "🔁 Replaced /index.html with SPA shell.";
+            $backup = $base . '/index.backup.html';
+
+            if (file_exists($backup)) {
+                copy($backup, $file);
+                echo "🔁 Restored /index.html from backup.";
+            } elseif (file_exists($file)) {
+                echo "ℹ️ /index.html exists but no backup available.";
             } else {
                 echo "ℹ️ No /index.html found to replace.";
             }
