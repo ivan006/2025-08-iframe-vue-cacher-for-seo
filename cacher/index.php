@@ -119,11 +119,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <label for="targetUrl" class="form-label">Step 3 — SPA URL (auto-detected)</label>
         <input type="url" id="targetUrl" class="form-control" readonly>
         <div class="form-text">
-            Auto-detected from current domain. Updates automatically when slug changes.
+            Auto-detected from current domain. Shows the page being previewed.
         </div>
     </div>
 
     <iframe id="preview" style="width:100%; height:600px; border:1px solid #ccc;"></iframe>
+
 
     <!-- Step 4 -->
     <div class="mt-3">
@@ -177,33 +178,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     };
 
-    const updateTargetUrl = () => {
-        const slug = $('slug').value.trim().replace(/^\/+|\/+$/g, '');
+
+    // on page load, set the homepage URL + iframe
+    window.addEventListener('DOMContentLoaded', () => {
         const base = window.location.origin;
-        $('targetUrl').value = slug ? `${base}/${slug}/` : `${base}/`;
-    };
-
-    // update when slug changes
-    $('slug').addEventListener('input', updateTargetUrl);
-
-    // run once on load
-    updateTargetUrl();
-
-    
-
-    const updatePreview = () => {
-        const slug = $('slug').value.trim().replace(/^\/+|\/+$/g, '');
-        const base = window.location.origin;
-        const url = slug ? `${base}/${slug}/` : `${base}/`;
+        const url = `${base}/`;
         $('targetUrl').value = url;
         $('preview').src = url;
-    };
+    });
 
-    // Update when slug changes
-    $('slug').addEventListener('input', updatePreview);
 
-    // Run once on load (homepage)
-    updatePreview();
 
 </script>
 </body>
