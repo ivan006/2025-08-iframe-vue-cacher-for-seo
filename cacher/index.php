@@ -114,52 +114,68 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body class="p-4">
-<div class="container">
-    <h1 class="mb-4">Iframe Vue Cacher for SEO</h1>
+<div class="container my-4">
 
-    <div class="mt-3">
-        <button id="btnBackup" class="btn btn-outline-secondary " type="button">Step 0 — Backup Root Index</button>
+  <!-- Title -->
+  <h1 class="mb-4">Iframe Vue Cacher for SEO</h1>
+
+  <!-- Step 0: Backup -->
+  <div class="card mb-3">
+    <div class="card-header">Step 0 — Backup Root Index</div>
+    <div class="card-body">
+      <button id="btnBackup" class="btn btn-outline-secondary">Backup Root Index</button>
     </div>
-    <!-- Step 1: Page selection -->
-    <div class="mb-3">
-        <label class="form-label">Step 1 — Select pages to cache</label>
-        <div id="pageList" class="form-check"></div>
-        <div class="form-text">
-            Homepage is always available by default, other pages come from <code>pages.json</code>.
-        </div>
+  </div>
+
+  <!-- Step 1: Page Selection -->
+  <div class="card mb-3">
+    <div class="card-header">Step 1 — Select Pages to Cache</div>
+    <div class="card-body" id="pageList">
+      <!-- checkboxes get injected here -->
     </div>
-
-
-    <!-- Step 2 -->
-    <div class="mb-3">
-        <button id="btnDelete" class="btn btn-outline-danger" type="button">Step 2 — Delete Selected Pages</button>
-        <div class="form-text">
-            Homepage: restores <code>/index.html</code> from backup.<br>
-            Other pages: deletes only <code>/slug/index.html</code>.
-        </div>
+    <div class="card-footer small text-muted">
+      Homepage is always available by default, other pages come from <code>pages.json</code>.
     </div>
+  </div>
 
-
-    <!-- Step 3: Save -->
-    <div class="mt-3">
-        <button id="btnSave" class="btn btn-success" type="button">Step 3 — Cache Selected Pages</button>
+  <!-- Step 2 + 3: Actions -->
+  <div class="card mb-3">
+    <div class="card-header">Step 2 & Step 3 — Actions</div>
+    <div class="card-body d-flex justify-content-between">
+      <button id="btnDelete" class="btn btn-outline-danger">
+        Delete Selected Pages
+      </button>
+      <button id="btnSave" class="btn btn-success">
+        Cache Selected Pages
+      </button>
     </div>
-
-    <!-- Info: Auto-detected URL -->
-    <div class="mb-3 mt-4">
-        <label for="targetUrl" class="form-label">SPA URL (auto-detected)</label>
-        <input type="url" id="targetUrl" class="form-control" readonly>
-        <div class="form-text">
-            Shows the page currently being cached. This updates automatically.
-        </div>
+    <div class="card-footer small text-muted">
+      Homepage: restores <code>/index.html</code> from backup. Other pages delete or save <code>/slug/index.html</code>.
     </div>
+  </div>
 
-    <!-- Preview -->
-    <iframe id="preview" style="width:100%; height:600px; border:1px solid #ccc;"></iframe>
+  <!-- Current Status -->
+  <div class="card mb-3">
+    <div class="card-header">Current Status</div>
+    <div class="card-body">
+      <div class="mb-2">
+        <span class="fw-bold">SPA URL:</span>
+        <span id="targetUrl" class="text-monospace">—</span>
+      </div>
+      <iframe id="preview" class="w-100 border" style="height:500px;"></iframe>
+    </div>
+  </div>
 
+  <!-- Activity Log -->
+  <div class="card">
+    <div class="card-header">Activity Log</div>
+    <div class="card-body" id="result">
+      <p class="text-muted mb-0">No actions yet.</p>
+    </div>
+  </div>
 
-    <div id="result" class="mt-3 fw-bold"></div>
 </div>
+
 
 <script>
     const $ = (id) => document.getElementById(id);
