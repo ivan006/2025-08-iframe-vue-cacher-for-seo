@@ -1,3 +1,4 @@
 cache/.htpasswd
 cacher/.htaccess
 /.idea
+cacher/pages.json

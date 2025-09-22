@@ -98,12 +98,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <div class="mt-3">
         <button id="btnBackup" class="btn btn-outline-secondary " type="button">Step 0 — Backup Root Index</button>
     </div>
-    <!-- Step 1 -->
+    <!-- Step 1: Page selection -->
     <div class="mb-3">
-        <label for="slug" class="form-label">Step 1 — Enter slug</label>
-        <input type="text" id="slug" class="form-control" placeholder='e.g. "services" — leave blank for homepage'>
-        <div class="form-text">Saves to <code>/slug/index.html</code> or <code>/index.html</code> when blank.</div>
+        <label class="form-label">Step 1 — Select pages to cache</label>
+        <div id="pageList" class="form-check"></div>
+        <div class="form-text">
+            Homepage is always available by default, other pages come from <code>pages.json</code>.
+        </div>
     </div>
+
 
     <!-- Step 2 -->
     <div class="mb-3">
@@ -162,32 +165,47 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 
     $('btnSave').onclick = () => {
-        const slug = $('slug').value.trim().replace(/^\/+|\/+$/g, '');
+        const selected = [...document.querySelectorAll('#pageList input:checked')]
+            .map(el => el.value); // '' means homepage
+
+        if (!selected.length) {
+            alert('Please select at least one page.');
+            return;
+        }
+
         const base = window.location.origin;
-        const url = slug ? `${base}/${slug}/` : `${base}/`;
-
-        $('targetUrl').value = url;
         const iframe = $('preview');
-        iframe.src = url;
 
-        iframe.onload = () => {
-            // wait 1 second after load before capturing
-            setTimeout(async () => {
-            try {
-                const html = iframe.contentDocument.documentElement.outerHTML;
-                const body = new URLSearchParams({ action: 'save', slug, html });
-                const res = await fetch('', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                body
-                });
-                $('result').textContent = await res.text();
-            } catch (e) {
-                alert('❌ Unable to access iframe. Must be same-origin.');
+        // process each page sequentially
+        (async function processPages() {
+            for (const slug of selected) {
+            const url = slug ? `${base}/${slug}/` : `${base}/`;
+            $('targetUrl').value = url;
+            iframe.src = url;
+
+            await new Promise(resolve => {
+                iframe.onload = () => {
+                setTimeout(async () => {
+                    try {
+                    const html = iframe.contentDocument.documentElement.outerHTML;
+                    const body = new URLSearchParams({ action: 'save', slug, html });
+                    const res = await fetch('', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                        body
+                    });
+                    $('result').textContent = await res.text();
+                    } catch (e) {
+                    alert('❌ Unable to access iframe. Must be same-origin.');
+                    }
+                    resolve();
+                }, 1000); // wait 1s
+                };
+            });
             }
-            }, 1000); // 1 second delay
-        };
+        })();
     };
+
 
 
 
@@ -199,6 +217,40 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $('targetUrl').value = url;
         $('preview').src = url;
     });
+
+    async function loadPages() {
+        const container = $('pageList');
+
+        // Always add homepage
+        const home = document.createElement('div');
+        home.className = 'form-check';
+        home.innerHTML = `
+            <input class="form-check-input" type="checkbox" value="" id="page-home">
+            <label class="form-check-label" for="page-home">Homepage</label>
+        `;
+        container.appendChild(home);
+
+        try {
+            const res = await fetch('pages.json');
+            const pages = await res.json();
+
+            pages.forEach((slug, i) => {
+            const clean = slug.replace(/^\/+|\/+$/g, ''); // normalize
+            const div = document.createElement('div');
+            div.className = 'form-check';
+            div.innerHTML = `
+                <input class="form-check-input" type="checkbox" value="${clean}" id="page-${i}">
+                <label class="form-check-label" for="page-${i}">/${clean}/</label>
+            `;
+            container.appendChild(div);
+            });
+        } catch (e) {
+            container.innerHTML += `<div class="text-danger">❌ Could not load pages.json</div>`;
+        }
+    }
+
+    loadPages();
+
 
 
 
