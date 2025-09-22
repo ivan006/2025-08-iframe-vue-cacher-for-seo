@@ -116,12 +116,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     <!-- Step 3 -->
     <div class="mb-3">
-        <label for="targetUrl" class="form-label">Step 3 — Enter SPA URL and render</label>
-        <div class="input-group">
-            <input type="url" id="targetUrl" class="form-control" placeholder="https://yourdomain.com/services/">
-            <button id="btnRender" class="btn btn-primary" type="button">Render</button>
+        <label for="targetUrl" class="form-label">Step 3 — SPA URL (auto-detected)</label>
+        <input type="url" id="targetUrl" class="form-control" readonly>
+        <div class="form-text">
+            Auto-detected from current domain. Updates automatically when slug changes.
         </div>
-        <div class="form-text">Must be same-origin so the iframe can read HTML.</div>
     </div>
 
     <iframe id="preview" style="width:100%; height:600px; border:1px solid #ccc;"></iframe>
@@ -159,14 +158,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $('result').textContent = await res.text();
     };
 
-    $('btnRender').onclick = () => {
-        const url = $('targetUrl').value.trim();
-        if (!url) {
-            alert('Enter a URL to render.');
-            return;
-        }
-        $('preview').src = url;
-    };
+
 
     $('btnSave').onclick = async () => {
         const slug = $('slug').value.trim().replace(/^\/+|\/+$/g, '');
@@ -184,6 +176,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             alert('❌ Unable to access iframe. Must be same-origin.');
         }
     };
+
+    const updateTargetUrl = () => {
+        const slug = $('slug').value.trim().replace(/^\/+|\/+$/g, '');
+        const base = window.location.origin;
+        $('targetUrl').value = slug ? `${base}/${slug}/` : `${base}/`;
+    };
+
+    // update when slug changes
+    $('slug').addEventListener('input', updateTargetUrl);
+
+    // run once on load
+    updateTargetUrl();
+
+    
+
+    const updatePreview = () => {
+        const slug = $('slug').value.trim().replace(/^\/+|\/+$/g, '');
+        const base = window.location.origin;
+        const url = slug ? `${base}/${slug}/` : `${base}/`;
+        $('targetUrl').value = url;
+        $('preview').src = url;
+    };
+
+    // Update when slug changes
+    $('slug').addEventListener('input', updatePreview);
+
+    // Run once on load (homepage)
+    updatePreview();
+
 </script>
 </body>
 </html>
