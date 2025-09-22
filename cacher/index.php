@@ -117,22 +117,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </div>
     </div>
 
-    <!-- Step 3 -->
-    <div class="mb-3">
-        <label for="targetUrl" class="form-label">Step 3 — SPA URL (auto-detected)</label>
+    <!-- Step 3: Save -->
+    <div class="mt-3">
+        <button id="btnSave" class="btn btn-success" type="button">Step 3 — Cache Selected Pages</button>
+    </div>
+
+    <!-- Info: Auto-detected URL -->
+    <div class="mb-3 mt-4">
+        <label for="targetUrl" class="form-label">SPA URL (auto-detected)</label>
         <input type="url" id="targetUrl" class="form-control" readonly>
         <div class="form-text">
-            Auto-detected from current domain. Shows the page being previewed.
+            Shows the page currently being cached. This updates automatically.
         </div>
     </div>
 
+    <!-- Preview -->
     <iframe id="preview" style="width:100%; height:600px; border:1px solid #ccc;"></iframe>
 
-
-    <!-- Step 4 -->
-    <div class="mt-3">
-        <button id="btnSave" class="btn btn-success" type="button">Step 4 — Save HTML</button>
-    </div>
 
     <div id="result" class="mt-3 fw-bold"></div>
 </div>
