@@ -119,38 +119,41 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   <!-- Title -->
   <h1 class="mb-4">Iframe Vue Cacher for SEO</h1>
 
-  <!-- Step 0: Backup -->
+  <!-- Backup -->
   <div class="card mb-3">
-    <div class="card-header">Step 0 — Backup Root Index</div>
+    <div class="card-header">Backup Root Index</div>
     <div class="card-body">
       <button id="btnBackup" class="btn btn-outline-secondary">Backup Root Index</button>
     </div>
   </div>
 
-  <!-- Step 1: Page Selection -->
+  <!-- Page Selection -->
   <div class="card mb-3">
-    <div class="card-header">Step 1 — Select Pages to Cache</div>
+    <div class="card-header">Pages</div>
     <div class="card-body" id="pageList">
-      <!-- checkboxes get injected here -->
+      <!-- checkboxes injected here -->
     </div>
     <div class="card-footer small text-muted">
-      Homepage is always available by default, other pages come from <code>pages.json</code>.
+      Homepage is always included by default. Other pages come from <code>pages.json</code>.
     </div>
   </div>
 
-  <!-- Step 2 + 3: Actions -->
+  <!-- Actions -->
   <div class="card mb-3">
-    <div class="card-header">Step 2 & Step 3 — Actions</div>
-    <div class="card-body d-flex justify-content-between">
-      <button id="btnDelete" class="btn btn-outline-danger">
-        Delete Selected Pages
-      </button>
-      <button id="btnSave" class="btn btn-success">
-        Cache Selected Pages
-      </button>
+    <div class="card-header">Actions</div>
+    <div class="card-body">
+      <div class="btn-group" role="group">
+        <button id="btnDelete" class="btn btn-outline-danger">
+          Delete Selected
+        </button>
+        <button id="btnSave" class="btn btn-success">
+          Cache Selected
+        </button>
+      </div>
     </div>
     <div class="card-footer small text-muted">
-      Homepage: restores <code>/index.html</code> from backup. Other pages delete or save <code>/slug/index.html</code>.
+      Selected pages can be cached or deleted.  
+      Homepage restore uses the backup if available; other pages are removed or re-cached in <code>/slug/index.html</code>.
     </div>
   </div>
 
@@ -175,6 +178,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   </div>
 
 </div>
+
 
 
 <script>
