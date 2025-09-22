@@ -1,6 +1,24 @@
 <?php
 $base = dirname(__DIR__);
 
+function rrmdir($dir) {
+    if (!is_dir($dir)) {
+        return;
+    }
+    $objects = scandir($dir);
+    foreach ($objects as $object) {
+        if ($object != "." && $object != "..") {
+            $path = $dir . DIRECTORY_SEPARATOR . $object;
+            if (is_dir($path)) {
+                rrmdir($path);
+            } else {
+                unlink($path);
+            }
+        }
+    }
+    rmdir($dir);
+}
+
 // --- Quasar SPA shell used when clearing homepage ---
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -37,20 +55,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 echo "ℹ️ No /index.html found to replace.";
             }
         } else {
-            // NON-HOMEPAGE: delete only if /slug/index.html exists
-            $file = $base . "/$slug/index.html";
-            if (file_exists($file)) {
-                @unlink($file);
-                echo "🗑️ Deleted /$slug/index.html";
+            // NON-HOMEPAGE: delete the entire folder
+            $folder = $base . "/$slug";
+            if (is_dir($folder)) {
+                rrmdir($folder);
+                echo "🗑️ Deleted /$slug folder and its contents";
             } else {
-                echo "ℹ️ No /$slug/index.html found to delete.";
+                echo "ℹ️ No /$slug folder found to delete.";
             }
         }
+
         exit;
     }
 
     if ($action === 'save') {
-        $html = $_POST['html'] ?? '';
+        $html = base64_decode($_POST['html'] ?? '');
         if ($html === '') {
             http_response_code(400);
             echo "❌ Missing HTML content.";
@@ -73,6 +92,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Remove SEO/social meta tags (description, og, twitter, etc.)
         $html = preg_replace('/<meta[^>]+name=["\'](description|twitter:[^"\']+)["\'][^>]*>/i', '', $html);
         $html = preg_replace('/<meta[^>]+property=["\']og:[^"\']+["\'][^>]*>/i', '', $html);
+
+        // 🚫 Remove Google Tag Manager / gtm.js scripts
+        $html = preg_replace('/<script[^>]+src=["\']https:\/\/www\.googletagmanager\.com\/gtm\.js[^"\']*["\'][^>]*>\s*<\/script>/i', '', $html);
 
         file_put_contents($file, $html);
         echo "✅ Saved to " . ($slug === '' ? '/index.html' : "/$slug/index.html");
@@ -110,12 +132,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     <!-- Step 2 -->
     <div class="mb-3">
-        <button id="btnDelete" class="btn btn-outline-danger" type="button">Step 2 — Delete existing index.html</button>
+        <button id="btnDelete" class="btn btn-outline-danger" type="button">Step 2 — Delete Selected Pages</button>
         <div class="form-text">
-            Homepage: replaces <code>/index.html</code> with the backup.<br>
-            Other slugs: deletes only <code>/slug/index.html</code>.
+            Homepage: restores <code>/index.html</code> from backup.<br>
+            Other pages: deletes only <code>/slug/index.html</code>.
         </div>
     </div>
+
 
     <!-- Step 3: Save -->
     <div class="mt-3">
@@ -153,15 +176,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 
     $('btnDelete').onclick = async () => {
-        const slug = $('slug').value.trim().replace(/^\/+|\/+$/g, '');
-        const body = new URLSearchParams({action: 'delete', slug});
-        const res = await fetch('', {
+        const selected = [...document.querySelectorAll('#pageList input:checked')]
+            .map(el => el.value); // '' means homepage
+
+        if (!selected.length) {
+            alert('Please select at least one page.');
+            return;
+        }
+
+        for (const slug of selected) {
+            const body = new URLSearchParams({ action: 'delete', slug });
+            const res = await fetch('', {
             method: 'POST',
-            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
             body
-        });
-        $('result').textContent = await res.text();
+            });
+            const text = await res.text();
+
+            // append results instead of overwriting
+            const div = document.createElement('div');
+            div.textContent = text;
+            $('result').appendChild(div);
+        }
     };
+
 
 
 
@@ -189,7 +227,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 setTimeout(async () => {
                     try {
                     const html = iframe.contentDocument.documentElement.outerHTML;
-                    const body = new URLSearchParams({ action: 'save', slug, html });
+                    const encoded = btoa(unescape(encodeURIComponent(html)));
+                    const body = new URLSearchParams({ action: 'save', slug, html: encoded });
                     const res = await fetch('', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
