@@ -3,25 +3,6 @@ $base = dirname(__DIR__);
 
 // --- Quasar SPA shell used when clearing homepage ---
 
-function rrmdir($dir) {
-    if (!is_dir($dir)) {
-        return;
-    }
-    $objects = scandir($dir);
-    foreach ($objects as $object) {
-        if ($object != "." && $object != "..") {
-            $path = $dir . DIRECTORY_SEPARATOR . $object;
-            if (is_dir($path)) {
-                rrmdir($path);
-            } else {
-                unlink($path);
-            }
-        }
-    }
-    rmdir($dir);
-}
-
-
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = $_POST['action'] ?? '';
     $slug = trim($_POST['slug'] ?? '', "/");
@@ -56,59 +37,47 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 echo "ℹ️ No /index.html found to replace.";
             }
         } else {
-            // NON-HOMEPAGE: delete the entire folder
-            $folder = $base . "/$slug";
-            if (is_dir($folder)) {
-                rrmdir($folder);
-                echo "🗑️ Deleted /$slug folder and its contents";
+            // NON-HOMEPAGE: delete only if /slug/index.html exists
+            $file = $base . "/$slug/index.html";
+            if (file_exists($file)) {
+                @unlink($file);
+                echo "🗑️ Deleted /$slug/index.html";
             } else {
-                echo "ℹ️ No /$slug folder found to delete.";
+                echo "ℹ️ No /$slug/index.html found to delete.";
             }
         }
-
         exit;
     }
 
-if ($action === 'save') {
-    $html = $_POST['html'] ?? '';
-    $slug = $_POST['slug'] ?? '(missing)';
-    $folder = ($slug === '' || $slug === '/') ? $base : $base . '/' . trim($slug, '/');
-    $file = $folder . "/index.html";
+    if ($action === 'save') {
+        $html = $_POST['html'] ?? '';
+        if ($html === '') {
+            http_response_code(400);
+            echo "❌ Missing HTML content.";
+            exit;
+        }
 
-    echo "DEBUG: action=save\n";
-    echo "DEBUG: slug=[$slug]\n";
-    echo "DEBUG: folder=[$folder]\n";
-    echo "DEBUG: file=[$file]\n";
+        $folder = ($slug === '') ? $base : $base . "/$slug";
+        $file = $folder . "/index.html";
 
-    if ($html === '') {
-        http_response_code(400);
-        echo "❌ Missing HTML content.";
-        exit;
-    }
+        if (!is_dir($folder)) {
+            mkdir($folder, 0755, true);
+        }
 
-    if (!is_dir($folder)) {
-        mkdir($folder, 0755, true);
-    }
+        // Remove structured data scripts
+        $html = preg_replace('/<script[^>]+type=["\']application\/ld\+json["\'][^>]*>.*?<\/script>/is', '', $html);
 
-    // Remove structured data scripts
-    $html = preg_replace('/<script[^>]+type=["\']application\/ld\+json["\'][^>]*>.*?<\/script>/is', '', $html);
+        // Remove canonical links
+        $html = preg_replace('/<link[^>]+rel=["\']canonical["\'][^>]*>/i', '', $html);
 
-    // Remove canonical links
-    $html = preg_replace('/<link[^>]+rel=["\']canonical["\'][^>]*>/i', '', $html);
+        // Remove SEO/social meta tags (description, og, twitter, etc.)
+        $html = preg_replace('/<meta[^>]+name=["\'](description|twitter:[^"\']+)["\'][^>]*>/i', '', $html);
+        $html = preg_replace('/<meta[^>]+property=["\']og:[^"\']+["\'][^>]*>/i', '', $html);
 
-    // Remove SEO/social meta tags (description, og, twitter, etc.)
-    $html = preg_replace('/<meta[^>]+name=["\'](description|twitter:[^"\']+)["\'][^>]*>/i', '', $html);
-    $html = preg_replace('/<meta[^>]+property=["\']og:[^"\']+["\'][^>]*>/i', '', $html);
-
-    $ok = file_put_contents($file, $html);
-    if ($ok !== false) {
+        file_put_contents($file, $html);
         echo "✅ Saved to " . ($slug === '' ? '/index.html' : "/$slug/index.html");
-    } else {
-        echo "❌ Failed to save file.";
+        exit;
     }
-    exit;
-}
-
 
     http_response_code(400);
     echo "❌ Unknown action.";
@@ -141,13 +110,12 @@ if ($action === 'save') {
 
     <!-- Step 2 -->
     <div class="mb-3">
-        <button id="btnDelete" class="btn btn-outline-danger" type="button">Step 2 — Delete Selected Pages</button>
+        <button id="btnDelete" class="btn btn-outline-danger" type="button">Step 2 — Delete existing index.html</button>
         <div class="form-text">
-            Homepage: restores <code>/index.html</code> from backup.<br>
-            Other pages: deletes only <code>/slug/index.html</code>.
+            Homepage: replaces <code>/index.html</code> with the backup.<br>
+            Other slugs: deletes only <code>/slug/index.html</code>.
         </div>
     </div>
-
 
     <!-- Step 3: Save -->
     <div class="mt-3">
@@ -185,31 +153,15 @@ if ($action === 'save') {
 
 
     $('btnDelete').onclick = async () => {
-        const selected = [...document.querySelectorAll('#pageList input:checked')]
-            .map(el => el.value); // '' means homepage
-
-        if (!selected.length) {
-            alert('Please select at least one page.');
-            return;
-        }
-
-        for (const slug of selected) {
-            const cleanSlug = slug.replace(/^\/+|\/+$/g, '');
-            const body = new URLSearchParams({ action: 'delete', slug: cleanSlug });
-            const res = await fetch('', {
+        const slug = $('slug').value.trim().replace(/^\/+|\/+$/g, '');
+        const body = new URLSearchParams({action: 'delete', slug});
+        const res = await fetch('', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
             body
-            });
-            const text = await res.text();
-
-            // append results instead of overwriting
-            const div = document.createElement('div');
-            div.textContent = text;
-            $('result').appendChild(div);
-        }
+        });
+        $('result').textContent = await res.text();
     };
-
 
 
 
@@ -237,8 +189,7 @@ if ($action === 'save') {
                 setTimeout(async () => {
                     try {
                     const html = iframe.contentDocument.documentElement.outerHTML;
-                    const cleanSlug = slug.replace(/^\/+|\/+$/g, ''); // strip leading/trailing slashes
-                    const body = new URLSearchParams({ action: 'save', slug: cleanSlug, html });
+                    const body = new URLSearchParams({ action: 'save', slug, html });
                     const res = await fetch('', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
