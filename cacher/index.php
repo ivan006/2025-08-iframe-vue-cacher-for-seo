@@ -161,22 +161,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 
 
-    $('btnSave').onclick = async () => {
+    $('btnSave').onclick = () => {
         const slug = $('slug').value.trim().replace(/^\/+|\/+$/g, '');
+        const base = window.location.origin;
+        const url = slug ? `${base}/${slug}/` : `${base}/`;
+
+        $('targetUrl').value = url;
         const iframe = $('preview');
-        try {
-            const html = iframe.contentDocument.documentElement.outerHTML;
-            const body = new URLSearchParams({action: 'save', slug, html});
-            const res = await fetch('', {
+        iframe.src = url;
+
+        iframe.onload = () => {
+            // wait 1 second after load before capturing
+            setTimeout(async () => {
+            try {
+                const html = iframe.contentDocument.documentElement.outerHTML;
+                const body = new URLSearchParams({ action: 'save', slug, html });
+                const res = await fetch('', {
                 method: 'POST',
-                headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                 body
-            });
-            $('result').textContent = await res.text();
-        } catch (e) {
-            alert('❌ Unable to access iframe. Must be same-origin.');
-        }
+                });
+                $('result').textContent = await res.text();
+            } catch (e) {
+                alert('❌ Unable to access iframe. Must be same-origin.');
+            }
+            }, 1000); // 1 second delay
+        };
     };
+
+
 
 
     // on page load, set the homepage URL + iframe
